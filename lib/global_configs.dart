@@ -4,6 +4,7 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:gato/gato.dart' as gato;
+import 'package:http/http.dart' as http;
 
 /// A singleton class to set and get global configs.
 ///
@@ -44,6 +45,28 @@ class GlobalConfigs {
   /// ```
   Future<GlobalConfigs> loadJsonFromdir(String dir, {String? path}) async {
     String content = await rootBundle.loadString(dir);
+    Map<String, dynamic> res = json.decode(content);
+    path == null ? configs.addAll(res) : set(path, res);
+
+    return _singleton;
+  }
+
+  /// Load your [GlobalConfigs] from a `url` into the current configs
+  ///
+  /// Load your configs into a specific path by [path]
+  /// It will create new key if the [path] doesn't exist
+  ///
+  /// ```dart
+  /// await GlobalConfigs().loadJsonFromDir(dir);
+  /// ```
+  Future<GlobalConfigs> loadJsonFromUrl(String url, {String? path}) async {
+    // String content = await rootBundle.loadString();
+    http.Response response = await http.get(Uri.parse(url));
+    if (response.statusCode != 200) {
+      throw new Exception(
+          'HTTP request failed, statusCode: ${response.statusCode}, $url');
+    }
+    String content = response.body;
     Map<String, dynamic> res = json.decode(content);
     path == null ? configs.addAll(res) : set(path, res);
 
